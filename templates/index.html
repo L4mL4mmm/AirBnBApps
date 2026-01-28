@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Airbnb Price Prediction</title>
+    <!-- Link to Custom CSS -->
+    <link rel="stylesheet" type="text/css" href="{{url_for('static', filename='style.css')}}">
+    <!-- Font Awesome for Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+</head>
+
+<body>
+
+    <div class="container">
+        <h1><i class="fab fa-airbnb"></i> Dự đoán Giá Airbnb</h1>
+
+        <!-- Result Display -->
+        {% if final_result %}
+        <div class="result-box" style="display: block;">
+            <h3>Giá dự đoán: <span style="font-size: 1.5em; font-weight: bold;">${{final_result}}</span> / đêm</h3>
+        </div>
+        {% endif %}
+
+        <!-- Similar Listings Verification -->
+        {% if similar_listings %}
+        <div
+            style="margin-top: 20px; border: 1px solid #ddd; padding: 15px; border-radius: 8px; background-color: #f9f9f9;">
+            <h3 style="color: var(--secondary-color); text-align: center;"><i class="fas fa-search"></i> Tham khảo: Căn
+                hộ tương tự thực tế</h3>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 0.9em;">
+                    <thead>
+                        <tr style="background-color: #eee;">
+                            <th style="padding: 8px; border: 1px solid #ddd;">Tên căn hộ</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Khu vực</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Rating</th>
+                            <th style="padding: 8px; border: 1px solid #ddd;">Giá thực tế</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in similar_listings %}
+                        <tr>
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ item.name }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ item.neighbourhood }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{{ item.rating }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: green;">${{
+                                item.price }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            <p style="font-size: 0.8em; color: #666; text-align: center; margin-top: 5px;">* Dữ liệu lấy ngẫu nhiên từ
+                dataset Airbnb 2025.</p>
+        </div>
+        {% endif %}
+
+        <form action="{{url_for('home')}}" method="POST" onsubmit="showLoader()">
+            <div class="form-grid">
+                <!-- Essential Fields (Always Visible) -->
+                <div class="form-group">
+                    <label><i class="fas fa-city"></i> Thành phố</label>
+                    <select name="city" id="city" required>
+                        <option value="LA" {% if form_data and form_data.get('city')=='LA' %}selected{% endif %}>Los
+                            Angeles</option>
+                        <option value="SF" {% if form_data and form_data.get('city')=='SF' %}selected{% endif %}>San
+                            Francisco</option>
+                        <option value="Boston" {% if form_data and form_data.get('city')=='Boston' %}selected{% endif
+                            %}>Boston</option>
+                        <option value="Chicago" {% if form_data and form_data.get('city')=='Chicago' %}selected{% endif
+                            %}>Chicago</option>
+                        <option value="DC" {% if form_data and form_data.get('city')=='DC' %}selected{% endif %}>
+                            Washington, D.C.</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-home"></i> Loại bất động sản</label>
+                    <select name="property_type" id="property_type">
+                        <option value="Apartment" {% if form_data and form_data.get('property_type')=='Apartment'
+                            %}selected{% endif %}>Căn hộ (Apartment)</option>
+                        <option value="House" {% if form_data and form_data.get('property_type')=='House' %}selected{%
+                            endif %}>Nhà riêng (House)</option>
+                        <option value="Condominium" {% if form_data and form_data.get('property_type')=='Condominium'
+                            %}selected{% endif %}>Chung cư (Condominium)</option>
+                        <option value="Townhouse" {% if form_data and form_data.get('property_type')=='Townhouse'
+                            %}selected{% endif %}>Nhà phố (Townhouse)</option>
+                        <option value="Loft" {% if form_data and form_data.get('property_type')=='Loft' %}selected{%
+                            endif %}>Căn hộ gác mái (Loft)</option>
+                        <option value="Bed & Breakfast" {% if form_data and
+                            form_data.get('property_type')=='Bed & Breakfast' %}selected{% endif %}>Nhà nghỉ (B&B)
+                        </option>
+                        <option value="Bungalow" {% if form_data and form_data.get('property_type')=='Bungalow'
+                            %}selected{% endif %}>Nhà gỗ (Bungalow)</option>
+                        <option value="Boat" {% if form_data and form_data.get('property_type')=='Boat' %}selected{%
+                            endif %}>Nhà thuyền (Boat)</option>
+                        <option value="Other" {% if form_data and form_data.get('property_type')=='Other' %}selected{%
+                            endif %}>Khác</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-door-open"></i> Loại phòng</label>
+                    <select name="room_type" id="room_type">
+                        <option value="Entire home/apt" {% if form_data and
+                            form_data.get('room_type')=='Entire home/apt' %}selected{% endif %}>Nguyên căn</option>
+                        <option value="Private room" {% if form_data and form_data.get('room_type')=='Private room'
+                            %}selected{% endif %}>Phòng riêng</option>
+                        <option value="Shared room" {% if form_data and form_data.get('room_type')=='Shared room'
+                            %}selected{% endif %}>Phòng chia sẻ</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-users"></i> Số người tối đa</label>
+                    <input type="number" name="accommodates" value="{{ form_data.get('accommodates', 1) }}" min="1"
+                        max="16" required>
+                </div>
+
+                <!-- Expanded Basic Fields as Requested -->
+                <div class="form-group">
+                    <label><i class="fas fa-bed"></i> Số phòng ngủ</label>
+                    <input type="number" name="bedrooms" value="{{ form_data.get('bedrooms', 1) }}" min="0" max="10">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-bath"></i> Số phòng tắm</label>
+                    <input type="number" name="bathrooms" value="{{ form_data.get('bathrooms', 1) }}" min="0" max="10"
+                        step="0.5">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-couch"></i> Loại giường</label>
+                    <select name="bed_type">
+                        <option value="Real Bed" {% if form_data and form_data.get('bed_type')=='Real Bed' %}selected{%
+                            endif %}>Giường thực (Real Bed)</option>
+                        <option value="Pull-out Sofa" {% if form_data and form_data.get('bed_type')=='Pull-out Sofa'
+                            %}selected{% endif %}>Sofa giường</option>
+                        <option value="Airbed" {% if form_data and form_data.get('bed_type')=='Airbed' %}selected{%
+                            endif %}>Đệm hơi</option>
+                        <option value="Futon" {% if form_data and form_data.get('bed_type')=='Futon' %}selected{% endif
+                            %}>Nệm gấp (Futon)</option>
+                        <option value="Couch" {% if form_data and form_data.get('bed_type')=='Couch' %}selected{% endif
+                            %}>Ghế dài (Couch)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-broom"></i> Phí dọn dẹp</label>
+                    <select name="cleaning_fee">
+                        <option value="1" {% if form_data and form_data.get('cleaning_fee')=='1' %}selected{% endif %}>
+                            Có</option>
+                        <option value="0" {% if form_data and form_data.get('cleaning_fee')=='0' %}selected{% endif %}>
+                            Không</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-file-contract"></i> Chính sách hủy</label>
+                    <select name="cancellation_policy">
+                        <option value="flexible" {% if form_data and form_data.get('cancellation_policy')=='flexible'
+                            %}selected{% endif %}>Linh hoạt</option>
+                        <option value="moderate" {% if form_data and form_data.get('cancellation_policy')=='moderate'
+                            %}selected{% endif %}>Trung bình</option>
+                        <option value="strict" {% if form_data and form_data.get('cancellation_policy')=='strict'
+                            %}selected{% endif %}>Nghiêm ngặt</option>
+                        <option value="super_strict_30" {% if form_data and
+                            form_data.get('cancellation_policy')=='super_strict_30' %}selected{% endif %}>Rất nghiêm
+                            ngặt (30 ngày)</option>
+                        <option value="super_strict_60" {% if form_data and
+                            form_data.get('cancellation_policy')=='super_strict_60' %}selected{% endif %}>Rất nghiêm
+                            ngặt (60 ngày)</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-bolt"></i> Đặt phòng ngay</label>
+                    <select name="instant_bookable">
+                        <option value="1" {% if form_data and form_data.get('instant_bookable')=='1' %}selected{% endif
+                            %}>Có</option>
+                        <option value="0" {% if form_data and form_data.get('instant_bookable')=='0' %}selected{% endif
+                            %}>Không</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-user-check"></i> Host đã xác minh</label>
+                    <select name="host_identity_verified">
+                        <option value="1" {% if form_data and form_data.get('host_identity_verified')=='1' %}selected{%
+                            endif %}>Rồi</option>
+                        <option value="0" {% if form_data and form_data.get('host_identity_verified')=='0' %}selected{%
+                            endif %}>Chưa</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-star"></i> Điểm đánh giá (0-100)</label>
+                    <input type="number" name="review_scores_rating"
+                        value="{{ form_data.get('review_scores_rating', 90) }}" min="0" max="100">
+                </div>
+
+            </div>
+
+            <!-- Toggle Advanced Options -->
+            <div style="margin: 20px 0; text-align: left;">
+                <label
+                    style="cursor: pointer; font-weight: bold; color: var(--secondary-color); display: inline-flex; align-items: center;">
+                    <input type="checkbox" id="toggleAdvanced" onclick="toggleAdvancedOptions()"
+                        style="margin-right: 10px; width: auto;">
+                    <i class="fas fa-sliders-h" style="margin-right: 5px;"></i> Cài đặt nâng cao (Số giường chi tiết,
+                    Tiện ích, Review, Vị trí...)
+                </label>
+            </div>
+
+            <!-- Advanced Fields (Hidden by default) -->
+            <div id="advancedOptions" class="form-grid" style="display: none;">
+
+                <div class="form-group">
+                    <label><i class="fas fa-bed"></i> Số giường (Chi tiết)</label>
+                    <input type="number" name="beds" value="{{ form_data.get('beds', 1) }}" min="0" max="20">
+                </div>
+
+                <!-- Features & Policies -->
+                <div class="form-group">
+                    <label><i class="fas fa-wifi"></i> Số lượng tiện ích</label>
+                    <input type="number" name="amenities" value="{{ form_data.get('amenities', 5) }}" min="0" max="100"
+                        placeholder="VD: Wifi, Điều hòa...">
+                </div>
+
+                <!-- Host Info -->
+                <div class="form-group">
+                    <label><i class="fas fa-id-card"></i> Host có ảnh đại diện</label>
+                    <select name="host_has_profile_pic">
+                        <option value="1" {% if form_data and form_data.get('host_has_profile_pic')=='1' %}selected{%
+                            endif %}>Có</option>
+                        <option value="0" {% if form_data and form_data.get('host_has_profile_pic')=='0' %}selected{%
+                            endif %}>Không</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-comment"></i> Số lượng review</label>
+                    <input type="number" name="number_of_reviews" value="{{ form_data.get('number_of_reviews', 0) }}"
+                        min="0">
+                </div>
+
+                <!-- Map Coordinates -->
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Vĩ độ (Latitude)</label>
+                    <input type="number" name="latitude" value="{{ form_data.get('latitude', 38.8951) }}"
+                        step="0.000001">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-map-marker-alt"></i> Kinh độ (Longitude)</label>
+                    <input type="number" name="longitude" value="{{ form_data.get('longitude', -77.0364) }}"
+                        step="0.000001">
+                </div>
+
+                <div class="form-group">
+                    <label><i class="fas fa-reply"></i> Tỉ lệ phản hồi của Host (%)</label>
+                    <input type="number" name="host_response_rate"
+                        value="{{ form_data.get('host_response_rate', 100) }}" min="0" max="100">
+                </div>
+            </div>
+
+            <!-- Loader and Button -->
+            <div class="loader" id="loader"></div>
+            <input type="submit" value="Dự đoán Giá" id="submitBtn">
+        </form>
+
+        <!-- Prediction History -->
+        {% if history %}
+        <div style="margin-top: 40px;">
+            <h2 style="text-align: center; color: var(--secondary-color);"><i class="fas fa-history"></i> Lịch sử dự
+                đoán</h2>
+            <div style="overflow-x: auto;">
+                <table style="width: 100%; border-collapse: collapse; margin-top: 15px;">
+                    <thead>
+                        <tr style="background-color: var(--secondary-color); color: white;">
+                            <th style="padding: 10px; border: 1px solid #ddd;">Thành phố</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">Loại nhà</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">Loại phòng</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">Số người</th>
+                            <th style="padding: 10px; border: 1px solid #ddd;">Giá ($)</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for row in history %}
+                        <tr style="background-color: white; border-bottom: 1px solid #ddd;">
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ row[1] }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ row[2] }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd;">{{ row[3] }}</td>
+                            <td style="padding: 8px; border: 1px solid #ddd; text-align: center;">{{ row[4] }}</td>
+                            <td
+                                style="padding: 8px; border: 1px solid #ddd; font-weight: bold; color: var(--primary-color);">
+                                ${{ row[5] }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if error_message %}
+        <div
+            style="background-color: #fee; color: #c00; padding: 15px; margin-top: 20px; border-radius: 8px; border: 1px solid #fcc;">
+            <strong>Lỗi:</strong> {{ error_message }}
+        </div>
+        {% endif %}
+
+    </div>
+
+    <script>
+        function showLoader() {
+            document.getElementById('loader').style.display = 'block';
+            document.getElementById('submitBtn').value = 'Calculating...';
+            // Optional: Disable button to prevent double submit
+            // document.getElementById('submitBtn').disabled = true;
+        }
+
+        function toggleAdvancedOptions() {
+            var advanced = document.getElementById('advancedOptions');
+            var checkBox = document.getElementById('toggleAdvanced');
+            if (checkBox.checked == true) {
+                advanced.style.display = "grid";
+            } else {
+                advanced.style.display = "none";
+            }
+        }
+    </script>
+</body>
+
+</html>
