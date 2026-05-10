@@ -1,5 +1,5 @@
 # Airbnb Price Prediction - End-to-End ML Project 🏠💰
-# Chào Buổi Tối
+# Noi dung tu nhanh CONFLICT-TEST
 ![Python](https://img.shields.io/badge/Python-3.8%2B-blue)
 ![Flask](https://img.shields.io/badge/Flask-Web%20App-green)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Machine%20Learning-orange)
