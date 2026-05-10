@@ -4,7 +4,7 @@
 ![Flask](https://img.shields.io/badge/Flask-Web%20App-green)
 ![Scikit-Learn](https://img.shields.io/badge/Scikit--Learn-Machine%20Learning-orange)
 ![Status](https://img.shields.io/badge/Status-Completed-success)
-
+##JavaScriptCourse
 ## 📌 Giới thiệu (Introduction)
 
 Dự án này là một ứng dụng **End-to-End Machine Learning** hoàn chỉnh giúp dự đoán giá thuê căn hộ Airbnb dựa trên các thuộc tính như vị trí, loại phòng, tiện ích và số lượng người ở. Ứng dụng được xây dựng trên bộ dữ liệu thực tế từ **Inside Airbnb** (74,000+ bản ghi), sử dụng các kỹ thuật xử lý dữ liệu nâng cao và mô hình thuật toán tối ưu.
